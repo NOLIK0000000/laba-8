@@ -4,139 +4,70 @@ class MatrixLayers:
         self.n = len(a)
         self.m = len(a[0])
 
-    def count_layers(self):
-        x = self.n // 2
-        y = self.m // 2
-        if x < y:
-            return x
-        return y
+    def p(self):
+        return min(self.n // 2, self.m // 2)
 
-    def layer_coords(self, num):
-        top = num
-        left = num
-        bot = self.n - 1 - num
-        right = self.m - 1 - num
+    def coords(self, k):
+        t = l = k
+        b = self.n - 1 - k
+        r = self.m - 1 - k
         res = []
-        j = left
-        while j <= right:
-            res.append((top, j))
-            j += 1
-        i = top + 1
-        while i <= bot:
-            res.append((i, right))
-            i += 1
-        j = right - 1
-        while j >= left:
-            res.append((bot, j))
-            j -= 1
-        i = bot - 1
-        while i > top:
-            res.append((i, left))
-            i -= 1
+        for j in range(l, r + 1):
+            res.append((t, j))
+        for i in range(t + 1, b + 1):
+            res.append((i, r))
+        for j in range(r - 1, l - 1, -1):
+            res.append((b, j))
+        for i in range(b - 1, t, -1):
+            res.append((i, l))
         return res
 
-    def task_12_1(self):
-        p = self.count_layers()
-        new_a = []
-        for row in self.a:
-            new_row = []
-            for x in row:
-                new_row.append(x)
-            new_a.append(new_row)
-        for num in range(p):
-            coords = self.layer_coords(num)
-            cnt = len(coords)
-            step = p - num
-            step = step % cnt
-            vals = []
-            for c in coords:
-                vals.append(self.a[c[0]][c[1]])
-            if step != 0:
-                new_vals = []
-                for i in range(cnt - step, cnt):
-                    new_vals.append(vals[i])
-                for i in range(0, cnt - step):
-                    new_vals.append(vals[i])
-            else:
-                new_vals = vals
-            for k in range(cnt):
-                ii = coords[k][0]
-                jj = coords[k][1]
-                new_a[ii][jj] = new_vals[k]
-        return new_a
+    def t1(self):
+        p = self.p()
+        b = [row[:] for row in self.a]
+        for k in range(p):
+            c = self.coords(k)
+            vals = [self.a[i][j] for i, j in c]
+            s = (p - k) % len(c)
+            nv = vals[-s:] + vals[:-s] if s else vals
+            for x in range(len(c)):
+                b[c[x][0]][c[x][1]] = nv[x]
+        return b
 
-    def task_12_2(self):
-        p = self.count_layers()
-        new_a = []
-        for row in self.a:
-            new_row = []
-            for x in row:
-                new_row.append(x)
-            new_a.append(new_row)
-        for num in range(p):
-            coords = self.layer_coords(num)
-            for c in coords:
-                new_a[c[0]][c[1]] = num + 1
-        return new_a
+    def t2(self):
+        p = self.p()
+        b = [row[:] for row in self.a]
+        for k in range(p):
+            for i, j in self.coords(k):
+                b[i][j] = k + 1
+        return b
 
-    def task_12_3(self):
-        p = self.count_layers()
+    def t3(self):
+        return [sum(self.a[i][j] for i, j in self.coords(k)) for k in range(self.p())]
+
+    def t4(self):
         res = []
-        for num in range(p):
-            coords = self.layer_coords(num)
-            s = 0
-            for c in coords:
-                s = s + self.a[c[0]][c[1]]
-            res.append(s)
+        for k in range(self.p()):
+            v = [self.a[i][j] for i, j in self.coords(k)]
+            res.append(max(v) - min(v))
         return res
 
-    def task_12_4(self):
-        p = self.count_layers()
-        res = []
-        for num in range(p):
-            coords = self.layer_coords(num)
-            mn = None
-            mx = None
-            for c in coords:
-                v = self.a[c[0]][c[1]]
-                if mn is None:
-                    mn = v
-                    mx = v
-                else:
-                    if v < mn:
-                        mn = v
-                    if v > mx:
-                        mx = v
-            res.append(mx - mn)
-        return res
 
-def print_mat(a, text):
-    print(text)
-    for i in range(len(a)):
-        s = "  "
-        for j in range(len(a[i])):
-            s = s + str(a[i][j]) + " "
-        print(s)
+def show(a, t):
+    print(t)
+    for r in a:
+        print("  ", r)
     print()
 
-print("Введите N и M:")
-stroka = input()
-chasti = stroka.split()
-n = int(chasti[0])
-m = int(chasti[1])
-print("Введите", n, "строк по", m, "чисел:")
-mat = []
-for i in range(n):
-    s = input()
-    ch = s.split()
-    row = []
-    for x in ch:
-        row.append(float(x))
-    mat.append(row)
-obj = MatrixLayers(mat)
-print_mat(mat, "Исходная матрица:")
-print("Слоёв:", obj.count_layers())
-print("12.3 Суммы:", obj.task_12_3())
-print("12.4 Размахи:", obj.task_12_4())
-print_mat(obj.task_12_2(), "12.2 Заполнение:")
-print_mat(obj.task_12_1(), "12.1 Поворот:")
+
+n, m = map(int, input("N M: ").split())
+print("Введите", n, "строк:")
+mat = [list(map(float, input().split())) for _ in range(n)]
+
+o = MatrixLayers(mat)
+show(mat, "Исходная:")
+print("Слоёв:", o.p())
+print("12.3 Суммы:", o.t3())
+print("12.4 Размахи:", o.t4())
+show(o.t2(), "12.2 Заполнение:")
+show(o.t1(), "12.1 Поворот:")
